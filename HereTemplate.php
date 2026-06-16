@@ -43,10 +43,11 @@ class HereTemplate
         $templateFile = $this->dir . DIRECTORY_SEPARATOR . $template;
         $ext = strrchr(basename($templateFile), '.');
         $name = basename($templateFile, $ext);
-        $hash = md5(file_get_contents($templateFile));
+        $source = file_get_contents($templateFile);
+        $hash = md5($source);
         $cacheFile = $this->cache . DIRECTORY_SEPARATOR . $name . '.' . $hash . '.php';
-        if (!is_file($cacheFile)) {
-            copy($templateFile, $cacheFile);
+        if (!is_file($cacheFile) || filemtime(__FILE__) > filemtime($cacheFile)) {
+            file_put_contents($cacheFile, $this->compile($source));
         }
         
         // Clear cache
@@ -69,5 +70,64 @@ class HereTemplate
         }
         
         return $result;
+    }
+    
+    /**
+     * @param bool $condition
+     * @param mixed $then
+     * @param mixed $else
+     */
+    public function if($condition, $then = '', $else = '')
+    {
+        return $condition ? $then : $else;
+    }
+    
+    /**
+     * @param array<array-key, mixed> $array
+     * @param string $items
+     * @param string $block
+     * @return string
+     */
+    public function foreach($array, $items, $block)
+    {
+        $items = explode(',', $items);
+        $result = array_map(function($entry) use ($items, $block) {
+            if (!is_array($entry)) {
+                $entry = array($entry);
+            }
+            $params = array();
+            foreach ($items as $item) {
+                if (array_key_exists($item, $entry)) {
+                    array_push($params, $entry[$item]);
+                }
+            }
+            if (empty($params)) {
+                $params = array_values($entry);
+            }
+            return vsprintf($block, $params);
+        }, $array);
+        
+        return implode('', $result);
+    }
+    
+    /**
+     * @param string $source
+     * @return string
+     */
+    private function compile($source)
+    {
+        $tags = array(
+            '/@if\s*\((.*?)\)\s*\r?\n(.*?)(?:\r?\n\s*@else\s*\r?\n(.*?))?\r?\n(\s*)@endif\s*\r?\n/s' => "{\$this->if(%s,<<<HTML\n%s\nHTML\n,<<<HTML\n%s\nHTML\n%s)}\n",
+            '/@foreach\s*\((.*?) as (.*?)\)\s*\r?\n(.*?)\r?\n(\s*)@endforeach\s*\r?\n/s' => "{\$this->foreach(\$%s, '%s', <<<HTML\n%s\nHTML\n%s)}\n"
+        );
+        
+        foreach ($tags as $tag => $here) {
+            $source = preg_replace_callback($tag, function($matches) use ($here) {
+                array_shift($matches);
+                return vsprintf($here, $matches);
+            }, $source);
+        }
+        
+        return $source;
     }
 }

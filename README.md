@@ -107,3 +107,49 @@ The `return` syntax is not mandatory but avoids execution outside engine context
 It also protects template source.
 
 You can also create a `.htaccess` file in the your `templates` folder to prevent direct access to template files.
+
+## Extended HEREDOC syntax
+
+HereTemplate acts as a compiler by extending HEREDOC syntax to add features such as `if` blocks, loops, etc.
+
+### Conditions
+
+```php
+<?php
+
+$d = intval(date('N'));
+
+return <<<HTML
+Today {$this->if(1 === $d, 'is', 'is not')} monday
+HTML;
+```
+
+```
+Today
+    @if(1 === $d)
+        is
+    @else
+        is not
+    @endif
+monday
+```
+
+### Loops
+
+```php
+<?php
+
+$list = array('1', '2', '3');
+
+return <<<HTML
+<ul>{$this->foreach($list, 'value', '<li>%s</li>')}</ul>
+HTML;
+```
+
+```html
+<ul>
+    @foreach(list as value)
+        <li>%s</li>
+    @endforeach
+</ul>
+```
