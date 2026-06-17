@@ -120,7 +120,7 @@ HereTemplate acts as a compiler by extending HEREDOC syntax to add features such
 $d = intval(date('N'));
 
 return <<<HTML
-Today {$this->if(1 === $d, 'is', 'is not')} monday
+Today {$this->trueFalse(1 === $d, 'is', 'is not')} monday
 HTML;
 ```
 
@@ -142,7 +142,7 @@ monday
 $list = array('1', '2', '3');
 
 return <<<HTML
-<ul>{$this->foreach($list, 'value', '<li>%s</li>')}</ul>
+<ul>{$this->forAll($list, 'value', '<li>%s</li>')}</ul>
 HTML;
 ```
 
