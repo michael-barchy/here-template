@@ -106,7 +106,7 @@ Recommended: name your templates with a .here.php extension.
 The `return` syntax is not mandatory but avoids execution outside engine context.
 It also protects template source.
 
-You can also create a `.htaccess` file in the your `templates` folder to prevent direct access to template files.
+You can also create a `.htaccess` file in the `templates` folder to prevent direct access to template files.
 
 ## Extended HEREDOC syntax
 
